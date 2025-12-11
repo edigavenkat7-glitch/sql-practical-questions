@@ -1,0 +1,83 @@
+/* table having customers data and we need find out each day how many new customers and how many repeated customers 
+
+output should be like below 
+
+order_Date ,no_of_new_customers ,no_repeated_customers */
+
+
+CREATE TABLE customer_orders (
+    order_id     NUMBER,
+    customer_id  NUMBER,
+    order_date   DATE,
+    order_amount NUMBER
+);
+
+insert all into  customer_orders  
+values (1,100,'01-01-2022',2000)
+into  customer_orders values (2,200,'01-01-2022',2000)
+into  customer_orders values (3,300,'01-01-2022',2000)
+into  customer_orders values (4,100,'02-01-2022',2000)
+into  customer_orders values (5,300,'02-01-2022',2000)
+into  customer_orders values (6,500,'02-01-2022',2000)
+into  customer_orders values (7,100,'03-01-2022',2000)
+into  customer_orders values (8,400,'03-01-2022',2000)
+into  customer_orders values (9,600,'03-01-2022',2000)
+select * from dual;
+
+
+
+
+WITH date1 AS (
+    SELECT
+        customer_id,
+        order_amount,
+        MIN(order_date) AS first_visite_date
+    FROM
+        customer_orders
+    GROUP BY
+        customer_id,
+        order_amount
+)
+SELECT
+    c.order_date,
+    SUM(
+        CASE
+            WHEN c.order_date = o.first_visite_date THEN
+                1
+            ELSE
+                0
+        END
+    ) AS first_visit_flag,
+    SUM(
+        CASE
+            WHEN c.order_date <> o.first_visite_date THEN
+                1
+            ELSE
+                0
+        END
+    ) AS repeat_visit_flag,
+    SUM(
+        CASE
+            WHEN c.order_date = o.first_visite_date THEN
+                o.order_amount
+            ELSE
+                0
+        END
+    ) AS first_visit_amount,
+    SUM(
+        CASE
+            WHEN c.order_date <> o.first_visite_date THEN
+                o.order_amount
+            ELSE
+                0
+        END
+    ) AS repeat_visit_amount
+FROM
+    customer_orders c,
+    date1                   o
+WHERE
+    c.customer_id = o.customer_id
+GROUP BY
+    c.order_date
+ORDER BY
+    c.order_date;
